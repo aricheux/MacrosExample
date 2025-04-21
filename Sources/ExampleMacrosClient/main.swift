@@ -1,8 +1,27 @@
 import ExampleMacros
+import Foundation
 
-let a = 17
-let b = 25
+struct BookStore {
+    let books: [Book]
+}
 
-let (result, code) = #stringify(a + b)
+@MockData
+enum BookCategory {
+    case thriller
+    case fantasy
+}
 
-print("The value \(result) was produced by the code \"\(code)\"")
+@MockData
+struct Chapter {
+    let number: Int
+}
+
+@MockData
+struct Book {
+    let title: String
+    let subtitle: String?
+    let author: String
+    let releaseDate: Date
+    let numberOfPages: Int
+    let chapters: [Chapter]
+}

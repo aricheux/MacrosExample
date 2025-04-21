@@ -3,46 +3,78 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
-// Macro implementations build for the host, so the corresponding module is not available when cross-compiling. Cross-compiled tests may still make use of the macro itself in end-to-end tests.
-#if canImport(ExampleMacrosMacros)
 import ExampleMacrosMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+    "MockData": MockDataMacro.self,
 ]
-#endif
 
 final class ExampleMacrosTests: XCTestCase {
-    func testMacro() throws {
-        #if canImport(ExampleMacrosMacros)
+    func testEnumMacro() throws {
         assertMacroExpansion(
             """
-            #stringify(a + b)
+            @MockData
+            enum BookCategory {
+                case thriller
+                case fantasy
+            }
             """,
             expandedSource: """
-            (a + b, "a + b")
+            enum BookCategory {
+                case thriller
+                case fantasy
+            }
+            
+            extension BookCategory {
+                static func mockData() -> BookCategory {
+                    .thriller
+                }
+            }
             """,
             macros: testMacros
         )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
     }
-
-    func testMacroWithStringLiteral() throws {
-        #if canImport(ExampleMacrosMacros)
+    
+    func testStructMacro() throws {
         assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
-            expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#,
+            """
+            @MockData
+            struct Book {
+                let title: String
+                let subtitle: String?
+                let author: String
+                let releaseDate: Date
+                let numberOfPages: Int
+            }
+            """,
+            expandedSource: """
+            struct Book {
+                let title: String
+                let subtitle: String?
+                let author: String
+                let releaseDate: Date
+                let numberOfPages: Int
+            }
+            
+            extension Book {
+                static func mockData(
+                    title: String = "",
+                    subtitle: String? = nil,
+                    author: String = "",
+                    releaseDate: Date = Date(),
+                    numberOfPages: Int = 0
+                ) -> Book {
+                    Book(
+                        title: title,
+                        subtitle: subtitle,
+                        author: author,
+                        releaseDate: releaseDate,
+                        numberOfPages: numberOfPages
+                    )
+                }
+            }
+            """,
             macros: testMacros
         )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
     }
 }
